@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "title": "Python Basics",
+    "author": "John Doe",
+    "category": "Programming",
+    "available": true
+  },
+  {
+    "id": 2,
+    "title": "Linux Admin",
+    "author": "Ahmed Khan",
+    "category": "System",
+    "available": true
+  }
+]
