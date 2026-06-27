@@ -16,8 +16,7 @@ pipeline {
             }
         }
 
-        stage('Stop Old Container') {
-            steps {
+        stage('Stop Old Container') {                     Jenkinsfile                                               steps {
                 sh 'docker stop library-app || true'
                 sh 'docker rm library-app || true'
             }
