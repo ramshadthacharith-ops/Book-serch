@@ -1,0 +1,7 @@
+services:
+  library-app:
+    build: .
+    container_name: library-app
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
