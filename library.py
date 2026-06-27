@@ -1,60 +1,38 @@
-import json
+from flask import Flask, request, jsonify
+from database import get_connection
 
-FILE_NAME = "books.json"
+app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return "Library API with PostgreSQL 🚀"
 
-def load_books():
-    with open(FILE_NAME, "r") as file:
-        return json.load(file)
+# GET ALL BOOKS
+@app.route("/books", methods=["GET"])
+def get_books():
+    conn = get_connection()
+    cur = conn.cursor()
 
+    cur.execute("SELECT * FROM books")
+    rows = cur.fetchall()
 
-def search_book():
-    books = load_books()
+    books = []
+    for r in rows:
+        books.append({
+            "id": r[0],
+            "title": r[1],
+            "author": r[2]
+        })
 
-    keyword = input("Enter book name: ").lower()
-    found = False
+    cur.close()
+    conn.close()
 
-    print("\n📚 Search Results\n" + "-" * 40)
+    return jsonify(books)
 
-    for book in books:
-        if keyword in book["title"].lower():
+# ADD BOOK
+@app.route("/add", methods=["POST"])
+def add_book():
+    data = request.json
 
-            status = "Available" if book["available"] else "Borrowed"
-
-            print(f"""
-ID        : {book['id']}
-Title     : {book['title']}
-Author    : {book['author']}
-Category  : {book['category']}
-Status    : {status}
-""")
-            found = True
-
-    if not found:
-        print("❌ Book not found")
-
-
-def main():
-    while True:
-        print("""
-===== Library System =====
-
-1. Search Book
-2. Exit
-""")
-
-        choice = input("Choose: ")
-
-        if choice == "1":
-            search_book()
-
-        elif choice == "2":
-            print("Goodbye 👋")
-            break
-
-        else:
-            print("Invalid choice")
-
-
-if __name__ == "__main__":
-    main()
+    conn = get_connection()
+    cur = conn.cursor()
