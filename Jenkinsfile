@@ -65,21 +65,23 @@ pipeline {
         }
 
         stage('Test API') {
-            steps {
-                sh '''
-                echo "Running final API test..."
-                curl -s http://localhost:5000/books
-                '''
-            }
-        }
-    }
+    steps {
+        sh '''
+        echo "Waiting for API to be ready..."
 
-    post {
-        success {
-            echo '✅ Deployment Successful'
-        }
-        failure {
-            echo '❌ Deployment Failed'
-        }
+        for i in $(seq 1 30); do
+            if curl -s http://localhost:5000/books >/dev/null; then
+                echo "API is UP ✔"
+                curl http://localhost:5000/books
+                exit 0
+            fi
+
+            echo "Attempt $i failed - retrying..."
+            sleep 3
+        done
+
+        echo "API never became ready"
+        exit 1
+        '''
     }
 }
