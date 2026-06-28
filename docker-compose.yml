@@ -1,21 +1,9 @@
-services:... ]
-  library-app:
-    build: .
-    container_name: library-app
-    ports:
-      - "5000:5000"
-    depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      POSTGRES_DB: library
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+version: "3.8"
 
+services:
   db:
     image: postgres:16
     container_name: library-db
-    restart: always
     environment:
       POSTGRES_DB: library
       POSTGRES_USER: admin
@@ -23,8 +11,16 @@ services:... ]
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  app:
+    build: .
+    container_name: library-app
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+
 volumes:
-  db_data:
+  pgdata:
