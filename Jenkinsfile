@@ -3,33 +3,37 @@ pipeline {
 
     stages {
 
-        stage('Clean Workspace') {
+        stage('Checkout Code') {
             steps {
-                deleteDir()
+                git branch: 'main', url: 'https://github.com/ramshadthacharith-ops/Book-serch.git'
             }
         }
 
-        stage('Checkout Code') {
+        stage('Build Docker Image') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/ramshadthacharith-ops/Book-serch.git'
+                sh '''
+                docker compose build
+                '''
             }
         }
 
         stage('Deploy Application') {
             steps {
                 sh '''
-                docker-compose down --remove-orphans || true
-                docker-compose rm -fsv || true
-                docker-compose up -d --build --remove-orphans
+                docker compose down -v --remove-orphans || true
+                docker compose up -d --build
                 '''
             }
         }
 
-        stage('Test API') {
-            steps {
-                sh 'curl http://localhost:5000/books'
-            }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful'
+        }
+        failure {
+            echo 'Deployment Failed'
         }
     }
 }

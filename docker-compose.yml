@@ -4,28 +4,44 @@ services:
   db:
     image: postgres:16
     container_name: library-db
+
     environment:
       POSTGRES_DB: library
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
+
     ports:
-      - "5432:5432"
+      - "5433:5432"   # FIX: avoid host port conflict
+
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d library"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10s   # FIX: give postgres time to start
 
   app:
     build: .
     container_name: library-app
+
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: library
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+
     ports:
       - "5000:5000"
+
+    restart: always   # FIX: auto recover
 
 volumes:
   pgdata:
