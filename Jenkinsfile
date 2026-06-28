@@ -3,29 +3,52 @@ pipeline {
 
     stages {
 
-        stage('Clone Repository') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/ramshadthacharith-ops/Book-serch.git'
+                    url: 'https://github.com/ramshadthacharith-ops/Book-serch.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Verify Workspace') {
             steps {
-                sh 'docker build -t library-app .'
+                sh '''
+                pwd
+                ls -la
+                docker version
+                docker compose version
+                '''
             }
         }
 
-        stage('Stop Old Container') {                     Jenkinsfile                                               steps {
-                sh 'docker stop library-app || true'
-                sh 'docker rm library-app || true'
-            }
-        }
-
-        stage('Run Docker Container') {
+        stage('Deploy Application') {
             steps {
-                sh 'docker run -d --name library-app -p 5000:5000 library-app'
+                sh '''
+                docker compose down || true
+                docker compose up -d --build
+                '''
             }
+        }
+
+        stage('Wait for Startup') {
+            steps {
+                sh 'sleep 20'
+            }
+        }
+
+        stage('Test API') {
+            steps {
+                sh 'curl http://localhost:5000/books'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment Successful'
+        }
+        failure {
+            echo '❌ Deployment Failed'
         }
     }
 }
