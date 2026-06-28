@@ -17,9 +17,9 @@ pipeline {
                 pwd
                 ls -la
 
-                echo "==== Docker Versions ===="
-                docker version
-                docker compose version
+                echo "==== docker-compose ===="
+                docker-compose
+                docker-compose version
                 '''
             }
         }
@@ -27,11 +27,13 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 sh '''
+                set -e
+
                 echo "Stopping old containers..."
-                docker compose down || true
+                docker-compose down || true
 
                 echo "Building and starting containers..."
-                docker compose up -d --build
+                docker-compose up -d --build
                 '''
             }
         }
@@ -39,51 +41,52 @@ pipeline {
         stage('Wait for Startup (Health Check)') {
             steps {
                 sh '''
-                set +e
-
                 echo "Waiting for API to be ready..."
 
-                for i in $(seq 1 12); do
-                    echo "Attempt $i: checking API..."
-                    
-                    curl -s -f http://localhost:5000/books && {
-                        echo "API is UP!"
+                for i in $(seq 1 15); do
+                    echo "Attempt $i..."
+
+                    if curl -s -f http://localhost:5000/books; then
+                        echo "API is UP ✔"
                         exit 0
-                    }
+                    fi
 
                     sleep 5
                 done
 
-                echo "API failed to start in time"
-
-                echo "==== Docker Logs (library-app) ===="
+                echo "API failed to start"
                 docker logs library-app --tail 50 || true
-
                 exit 1
                 '''
             }
         }
 
         stage('Test API') {
-    steps {
-        sh '''
-        echo "Waiting for API (no fixed sleep)..."
+            steps {
+                sh '''
+                echo "Final API validation..."
 
-        for i in $(seq 1 40); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/books)
+                STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/books)
 
-            if [ "$STATUS" = "200" ]; then
-                echo "API is UP ✔"
-                curl http://localhost:5000/books
-                exit 0
-            fi
+                if [ "$STATUS" = "200" ]; then
+                    echo "API Working ✔"
+                    curl http://localhost:5000/books
+                else
+                    echo "API Failed ❌ HTTP $STATUS"
+                    docker logs library-app --tail 50
+                    exit 1
+                fi
+                '''
+            }
+        }
+    }
 
-            echo "Attempt $i -> HTTP $STATUS"
-            sleep 3
-        done
-
-        echo "API never became ready"
-        exit 1
-        '''
+    post {
+        success {
+            echo "✅ Deployment Successful"
+        }
+        failure {
+            echo "❌ Deployment Failed"
+        }
     }
 }
