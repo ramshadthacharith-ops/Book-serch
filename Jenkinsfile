@@ -67,16 +67,18 @@ pipeline {
         stage('Test API') {
     steps {
         sh '''
-        echo "Waiting for API to be ready..."
+        echo "Waiting for API (no fixed sleep)..."
 
-        for i in $(seq 1 30); do
-            if curl -s http://localhost:5000/books >/dev/null; then
+        for i in $(seq 1 40); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/books)
+
+            if [ "$STATUS" = "200" ]; then
                 echo "API is UP ✔"
                 curl http://localhost:5000/books
                 exit 0
             fi
 
-            echo "Attempt $i failed - retrying..."
+            echo "Attempt $i -> HTTP $STATUS"
             sleep 3
         done
 
