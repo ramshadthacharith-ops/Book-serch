@@ -1,46 +1,46 @@
 version: "3.8"
-
 services:
   db:
     build: ./db
     container_name: library-db
-
     environment:
       POSTGRES_DB: library
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-
     ports:
       - "5433:5432"   # FIX: avoid host port conflict
-
     volumes:
       - pgdata:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d library"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s   # FIX: give postgres time to start
-
   app:
     build: .
     container_name: library-app
-
     depends_on:
       db:
         condition: service_healthy
-
     environment:
       POSTGRES_HOST: db
       POSTGRES_DB: library
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-
     ports:
       - "5000:5000"
-
     restart: always   # FIX: auto recover
-
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: always
 volumes:
   pgdata:
+  grafana-data:
