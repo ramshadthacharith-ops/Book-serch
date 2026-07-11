@@ -21,8 +21,8 @@ pipeline {
                 sh '''
                 docker rm -f library-app library-db || true
                 docker volume rm book-search-pipeline_pgdata || true
-                docker-compose down --remove-orphans || true
-                docker-compose up -d --build --remove-orphans
+                sh 'docker compose down --remove-orphans' || true
+                sh 'docker compose up -d --build --remove-orphans
                 '''
             }
         }
