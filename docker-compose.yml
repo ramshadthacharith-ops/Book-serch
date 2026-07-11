@@ -31,6 +31,17 @@ services:
     ports:
       - "5000:5000"
     restart: always   # FIX: auto recover
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: always
   prometheus:
     build: ./monitoring
     container_name: prometheus
@@ -38,6 +49,7 @@ services:
       - "9090:9090"
     depends_on:
       - app
+      - cadvisor
     restart: always
   grafana:
     image: grafana/grafana
