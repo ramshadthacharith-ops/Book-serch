@@ -32,10 +32,8 @@ services:
       - "5000:5000"
     restart: always   # FIX: auto recover
   prometheus:
-    image: prom/prometheus
+    build: ./monitoring
     container_name: prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     depends_on:
