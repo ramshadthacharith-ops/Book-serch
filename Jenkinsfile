@@ -29,7 +29,7 @@ pipeline {
 
         stage('Test API') {
             steps {
-                sh 'sleep 10 && curl http://192.168.1.7:5000/books'
+                sh 'sleep 10 && curl http://172.17.0.1:5000/books'
             }
         }
     }
